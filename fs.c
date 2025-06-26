@@ -169,6 +169,9 @@ int fs_create(const char* filename) {
     // Per fs.h, -3 is for "other errors" like the FS not being mounted.
     if (disk_fd == -1) return -3; 
 
+    // Check for NULL filename
+    if (!filename) return -3;
+
     // A filename of MAX_FILENAME length would not fit with a null terminator.
     if (strlen(filename) >= MAX_FILENAME) return -3; 
     
@@ -199,6 +202,12 @@ int fs_delete(const char* filename) {
     // 1. Pre-condition Checks
     if (disk_fd == -1) return -2; // "Other errors" for not mounted
 
+    // Check for NULL filename
+    if (!filename) return -3;
+
+    // check if the filename is valid
+    if (strlen(filename) >= MAX_FILENAME) return -3; 
+
     // Find the file's inode
     int inode_idx = find_inode(filename);
     if (inode_idx == -1) return -1; // File doesn't exist
@@ -225,7 +234,8 @@ int fs_delete(const char* filename) {
     return 0; // Success
 }
 int fs_list(char filenames[][MAX_FILENAME], int max_files) {
-    if (disk_fd == -1) return -1; // "Other errors" for not mounted
+   // check if the filesystem is mounted and the parameters are valid
+    if (disk_fd == -1 || !filenames || max_files <= 0 || max_files > MAX_FILES) return -1; 
 
     int count = 0;
     for (int i = 0; i < MAX_FILES && count < max_files; i++) {
@@ -238,7 +248,11 @@ int fs_list(char filenames[][MAX_FILENAME], int max_files) {
     return count;
 }
 int fs_write(const char* filename, const void* data, int size) {
+    // check if the filesystem is mounted and the parameters are valid
     if (disk_fd == -1 || !filename || !data || size <= 0) return -3;
+
+    // check if the filename is valid
+    if (strlen(filename) >= MAX_FILENAME) return -3; 
 
     // Find the inode for the file
     int inode_idx = find_inode(filename);
@@ -294,7 +308,11 @@ int fs_write(const char* filename, const void* data, int size) {
     return 0; // Success
 }
 int fs_read(const char* filename, void* data, int size) {
+    // check if the filesystem is mounted and the parameters are valid
     if (disk_fd == -1 || !filename || !data || size <= 0) return -3;
+
+    // check if the filename is valid
+    if (strlen(filename) >= MAX_FILENAME) return -3;
 
     // Find the inode for the file
     int inode_idx = find_inode(filename);
