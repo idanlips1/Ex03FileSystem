@@ -254,6 +254,9 @@ int fs_write(const char* filename, const void* data, int size) {
     // check if the filename is valid
     if (strlen(filename) >= MAX_FILENAME) return -3; 
 
+    // check if the file is too large
+    if (size > MAX_FILES * BLOCK_SIZE) return -3;
+
     // Find the inode for the file
     int inode_idx = find_inode(filename);
     if (inode_idx == -1) return -1; // File doesn't exist
@@ -300,11 +303,11 @@ int fs_write(const char* filename, const void* data, int size) {
             char zero_buf[BLOCK_SIZE] = {0};
             write(disk_fd, zero_buf, BLOCK_SIZE - to_write);
         }
-        // Zero out unused block pointers
-        for (int i = needed_blocks; i < MAX_DIRECT_BLOCKS; i++) target_inode->blocks[i] = 0;
-
-        target_inode->size = size;
     }
+    // Zero out unused block pointers
+    for (int i = needed_blocks; i < MAX_DIRECT_BLOCKS; i++) target_inode->blocks[i] = 0;
+    // update the inode's size
+    target_inode->size = size;
     return 0; // Success
 }
 int fs_read(const char* filename, void* data, int size) {
